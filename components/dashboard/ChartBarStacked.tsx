@@ -33,6 +33,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Maximize2 } from "lucide-react";
 
 type Period = "12m" | "2y" | "5y" | "10y";
 
@@ -84,19 +93,10 @@ const chartConfig = {
   },
 } satisfies ChartConfig;
 
-export function ChartBarStacked() {
-  const [period, setPeriod] = useState<Period>("12m");
-  const chartData = useMemo(() => generateData(period), [period]);
-
-  const maxPatrimonio = Math.max(...chartData.map((d) => d.invested + d.gain));
+// Componente interno do gráfico para reuso
+const ChartRenderer = ({ data, period }: { data: ReturnType<typeof generateData>; period: Period }) => {
+  const maxPatrimonio = Math.max(...data.map((d) => d.invested + d.gain));
   const yAxisMax = Math.ceil(maxPatrimonio / 10000) * 10000;
-
-  const periodOptions = [
-    { value: "12m", label: "12 meses" },
-    { value: "2y", label: "2 anos" },
-    { value: "5y", label: "5 anos" },
-    { value: "10y", label: "10 anos" },
-  ];
 
   const getTickInterval = () => {
     if (period === "12m") return 0;
@@ -104,6 +104,93 @@ export function ChartBarStacked() {
     if (period === "5y") return 5;
     return 12;
   };
+
+  return (
+    <ChartContainer config={chartConfig} className="h-full w-full">
+      <ResponsiveContainer width="100%" height="100%">
+        <BarChart
+          data={data}
+          margin={{ top: 20, right: 10, left: 10, bottom: 5 }}
+        >
+          <CartesianGrid
+            vertical={false}
+            strokeDasharray="3 3"
+            stroke="var(--border)"
+            opacity={0.5}
+          />
+          <XAxis
+            dataKey="month"
+            tickLine={false}
+            tickMargin={10}
+            axisLine={false}
+            interval={getTickInterval()}
+            angle={-30}
+            textAnchor="end"
+            height={60}
+          />
+          <YAxis
+            domain={[0, yAxisMax]}
+            tickLine={false}
+            axisLine={false}
+            tickMargin={8}
+            tickFormatter={(value) =>
+              new Intl.NumberFormat("pt-BR", {
+                style: "currency",
+                currency: "BRL",
+                notation: "compact",
+                maximumFractionDigits: 0,
+              }).format(value)
+            }
+            width={65}
+            tickCount={6}
+          />
+          <ChartTooltip
+            content={
+              <ChartTooltipContent
+                formatter={(value, name) => {
+                  const formatted = new Intl.NumberFormat("pt-BR", {
+                    style: "currency",
+                    currency: "BRL",
+                  }).format(Number(value));
+                  const label =
+                    name === "invested" ? "Valor Aplicado" : "Ganho de Capital";
+                  return [formatted, label];
+                }}
+                labelFormatter={(label) => `${label}`}
+              />
+            }
+          />
+          <ChartLegend content={<ChartLegendContent />} />
+          <Bar
+            dataKey="invested"
+            stackId="a"
+            fill="var(--color-invested)"
+            radius={[0, 0, 4, 4]}
+            activeBar={{ fill: "var(--color-invested)", fillOpacity: 0.7 }}
+          />
+          <Bar
+            dataKey="gain"
+            stackId="a"
+            fill="var(--color-gain)"
+            radius={[4, 4, 0, 0]}
+            activeBar={{ fill: "var(--color-gain)", fillOpacity: 0.7 }}
+          />
+        </BarChart>
+      </ResponsiveContainer>
+    </ChartContainer>
+  );
+};
+
+export function ChartBarStacked() {
+  const [period, setPeriod] = useState<Period>("12m");
+  const chartData = useMemo(() => generateData(period), [period]);
+
+  const periodOptions = [
+    { value: "12m", label: "12 meses" },
+    { value: "2y", label: "2 anos" },
+    { value: "5y", label: "5 anos" },
+    { value: "10y", label: "10 anos" },
+  ];
 
   return (
     <Card className="flex flex-col h-full">
@@ -132,79 +219,29 @@ export function ChartBarStacked() {
           </Select>
         </div>
       </CardHeader>
-      <CardContent className="flex-1 min-h-0">
-        <ChartContainer config={chartConfig} className="h-full w-full block-graph-outline">
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart
-              data={chartData}
-              margin={{ top: 20, right: 10, left: 10, bottom: 5 }}
+      <CardContent className="flex-1 min-h-0 relative">
+        {/* Botão de expandir posicionado no canto inferior direito */}
+        <Dialog>
+          <DialogTrigger asChild>
+            <Button
+              variant="outline"
+              size="icon"
+              className="absolute bottom-4 right-4 z-10 shadow-md bg-background"
             >
-              <CartesianGrid
-                vertical={false}
-                strokeDasharray="3 3"
-                stroke="var(--border)"
-                opacity={0.5}
-              />
-              <XAxis
-                dataKey="month"
-                tickLine={false}
-                tickMargin={10}
-                axisLine={false}
-                interval={getTickInterval()}
-                angle={-30}
-                textAnchor="end"
-                height={60}
-              />
-              <YAxis
-                domain={[0, yAxisMax]}
-                tickLine={false}
-                axisLine={false}
-                tickMargin={8}
-                tickFormatter={(value) =>
-                  new Intl.NumberFormat("pt-BR", {
-                    style: "currency",
-                    currency: "BRL",
-                    notation: "compact",
-                    maximumFractionDigits: 0,
-                  }).format(value)
-                }
-                width={65}
-                tickCount={6}
-              />
-              <ChartTooltip
-                content={
-                  <ChartTooltipContent
-                    formatter={(value, name) => {
-                      const formatted = new Intl.NumberFormat("pt-BR", {
-                        style: "currency",
-                        currency: "BRL",
-                      }).format(Number(value));
-                      const label =
-                        name === "invested" ? "Valor Aplicado" : "Ganho de Capital";
-                      return [formatted, label];
-                    }}
-                    labelFormatter={(label) => `${label}`}
-                  />
-                }
-              />
-              <ChartLegend content={<ChartLegendContent />} />
-              <Bar
-                dataKey="invested"
-                stackId="a"
-                fill="var(--color-invested)"
-                radius={[0, 0, 4, 4]}
-                activeBar={{ fill: "var(--color-invested)", fillOpacity: 0.7 }}
-              />
-              <Bar
-                dataKey="gain"
-                stackId="a"
-                fill="var(--color-gain)"
-                radius={[4, 4, 0, 0]}
-                activeBar={{ fill: "var(--color-gain)", fillOpacity: 0.7 }}
-              />
-            </BarChart>
-          </ResponsiveContainer>
-        </ChartContainer>
+              <Maximize2 className="h-4 w-4" />
+              <span className="sr-only">Expandir gráfico</span>
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="!w-[80vw] !max-w-[80vw] h-[70vh] flex flex-col block-content block-graph-outline">
+            <DialogHeader>
+              <DialogTitle>Evolução Patrimonial</DialogTitle>
+            </DialogHeader>
+            <div className="flex-1 min-h-0">
+              <ChartRenderer data={chartData} period={period} />
+            </div>
+          </DialogContent>
+        </Dialog>
+        <ChartRenderer data={chartData} period={period} />
       </CardContent>
     </Card>
   );
