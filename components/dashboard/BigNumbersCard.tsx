@@ -1,20 +1,38 @@
+'use client';
+
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { TrendingUp, Wallet, Building2, Receipt, Gauge } from 'lucide-react';
 
 interface BigNumbersCardProps {
-  summary: DashboardSummary['portfolioSummary'];
+  totalNetWorth: string;
+  cashBalance: string;
+  investedValue: string;
+  taxLiabilities: string;
+  totalReturnPercent: string;
 }
 
-export function BigNumbersCard({ summary }: BigNumbersCardProps) {
-  const formatCurrency = (value: number) =>
-    new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
+export function BigNumbersCard({
+  totalNetWorth,
+  cashBalance,
+  investedValue,
+  taxLiabilities,
+  totalReturnPercent,
+}: BigNumbersCardProps) {
+  const formatCurrency = (value: string | number) =>
+    new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(Number(value));
+
+  const patrimonio = parseFloat(totalNetWorth);
+  const caixa = parseFloat(cashBalance);
+  const investido = parseFloat(investedValue);
+  const impostos = parseFloat(taxLiabilities);
+  const retorno = parseFloat(totalReturnPercent);
 
   const items = [
-    { title: 'Patrimônio Líquido Real', value: summary.patrimonioLiquidoReal, icon: <Wallet className="h-4 w-4" />, color: 'text-green-600' },
-    { title: 'Caixa', value: summary.caixa, icon: <Building2 className="h-4 w-4" />, color: 'text-blue-600' },
-    { title: 'Total Investido', value: summary.investido, icon: <TrendingUp className="h-4 w-4" />, color: 'text-gray-600' },
-    { title: 'Impostos a Pagar', value: summary.impostosAPagar, icon: <Receipt className="h-4 w-4" />, color: 'text-red-600' },
-    { title: 'Retorno Total %', value: summary.retornoTotalPercentual, icon: <Gauge className="h-4 w-4" />, color: summary.retornoTotalPercentual >= 0 ? 'text-green-600' : 'text-red-600', isPercent: true },
+    { title: 'Patrimônio Líquido Real', value: patrimonio, icon: <Wallet className="h-4 w-4" />, color: 'text-green-600' },
+    { title: 'Caixa', value: caixa, icon: <Building2 className="h-4 w-4" />, color: 'text-blue-600' },
+    { title: 'Total Investido', value: investido, icon: <TrendingUp className="h-4 w-4" />, color: 'text-gray-600' },
+    { title: 'Impostos a Pagar', value: impostos, icon: <Receipt className="h-4 w-4" />, color: 'text-red-600' },
+    { title: 'Retorno Total %', value: retorno, icon: <Gauge className="h-4 w-4" />, color: retorno >= 0 ? 'text-green-600' : 'text-red-600', isPercent: true },
   ];
 
   return (

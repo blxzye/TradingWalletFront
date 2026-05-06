@@ -3,7 +3,8 @@
 import { useQuery } from '@tanstack/react-query';
 import { SectionCards } from '@/components/section-cards';
 import { DataTable } from '@/components/data-table';
-import { AssetAllocationChart } from '@/components/dashboard/AssetAllocationChart';
+import { ChartDonutActive } from '@/components/dashboard/ChartDonutActive';
+import { ChartAreaInteractive } from '@/components/chart-area-interactive'; // Importe o gráfico de área
 import { api } from '@/lib/api/apiClient';
 import { Skeleton } from '@/components/ui/skeleton';
 
@@ -66,32 +67,32 @@ export default function DashboardPage() {
   })) || [];
 
   if (isLoading) {
-  return (
-    <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
-      {/* Skeletons dos 4 cards (mesmo grid do SectionCards) */}
-      <div className="grid grid-cols-1 gap-4 px-4 lg:px-6 @xl/main:grid-cols-2 @5xl/main:grid-cols-4">
-        {[...Array(4)].map((_, i) => (
-          <Skeleton key={i} className="h-32 w-full" />
-        ))}
-      </div>
-
-      {/* Skeletons dos gráficos: donut 1/3 + área 2/3 */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 px-4 lg:px-6">
-        <div className="lg:col-span-1">
-          <Skeleton className="h-[300px] w-full rounded-lg" />
+    return (
+      <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
+        {/* Skeletons dos 4 cards */}
+        <div className="grid grid-cols-1 gap-4 px-4 lg:px-6 @xl/main:grid-cols-2 @5xl/main:grid-cols-4">
+          {[...Array(4)].map((_, i) => (
+            <Skeleton key={i} className="h-32 w-full" />
+          ))}
         </div>
-        <div className="lg:col-span-2">
-          <Skeleton className="h-[300px] w-full rounded-lg" />
+
+        {/* Skeletons dos gráficos: donut 1/3 + área 2/3 */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 px-4 lg:px-6">
+          <div className="lg:col-span-1">
+            <Skeleton className="h-[300px] w-full rounded-lg" />
+          </div>
+          <div className="lg:col-span-2">
+            <Skeleton className="h-[300px] w-full rounded-lg" />
+          </div>
+        </div>
+
+        {/* Skeleton da tabela */}
+        <div className="px-4 lg:px-6">
+          <Skeleton className="h-96 w-full rounded-lg" />
         </div>
       </div>
-
-      {/* Skeleton da tabela (holdings) */}
-      <div className="px-4 lg:px-6">
-        <Skeleton className="h-96 w-full rounded-lg" />
-      </div>
-    </div>
-  );
-}
+    );
+  }
 
   if (error || !data) {
     return (
@@ -103,10 +104,20 @@ export default function DashboardPage() {
 
   return (
     <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
+      {/* Cards de métricas */}
       <SectionCards metrics={metrics} />
-      <div className="px-4 lg:px-6">
-        <AssetAllocationChart data={data.assetAllocation} />
+
+      {/* Grid de gráficos: donut 1/3, área 2/3 */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 px-4 lg:px-6">
+        <div className="lg:col-span-1">
+          <ChartDonutActive data={data.assetAllocation} />
+        </div>
+        <div className="lg:col-span-2">
+          <ChartAreaInteractive />
+        </div>
       </div>
+
+      {/* Tabela de holdings */}
       <DataTable data={holdingsTableData} />
     </div>
   );

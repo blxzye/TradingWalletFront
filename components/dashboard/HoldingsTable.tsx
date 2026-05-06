@@ -1,7 +1,7 @@
 'use client';
 
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { BackendDashboardSummary } from '@/types/backendDashboardSummary';
+import { BackendDashboardSummary } from '@/types/BackendDashboardSummary';
 
 interface HoldingsTableProps {
   holdings: BackendDashboardSummary['holdings'];
