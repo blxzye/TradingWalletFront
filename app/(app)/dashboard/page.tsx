@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { SectionCards } from '@/components/section-cards';
 import { DataTable } from '@/components/data-table';
 import { ChartDonutActive } from '@/components/dashboard/ChartDonutActive';
-import { ChartBarStacked } from '@/components/ChartBarStacked';
+import { ChartBarStacked } from '@/components/dashboard/ChartBarStacked';
 import { api } from '@/lib/api/apiClient';
 import { Skeleton } from '@/components/ui/skeleton';
 
