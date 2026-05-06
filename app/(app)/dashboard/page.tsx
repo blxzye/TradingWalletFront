@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { SectionCards } from '@/components/section-cards';
 import { DataTable } from '@/components/data-table';
 import { ChartDonutActive } from '@/components/dashboard/ChartDonutActive';
-import { ChartAreaInteractive } from '@/components/chart-area-interactive'; // Importe o gráfico de área
+import { ChartBarStacked } from '@/components/ChartBarStacked';
 import { api } from '@/lib/api/apiClient';
 import { Skeleton } from '@/components/ui/skeleton';
 
@@ -108,12 +108,12 @@ export default function DashboardPage() {
       <SectionCards metrics={metrics} />
 
       {/* Grid de gráficos: donut 1/3, área 2/3 */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 px-4 lg:px-6">
-        <div className="lg:col-span-1">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 px-4 lg:px-6 items-stretch">
+        <div className="lg:col-span-1 h-[350px]">
           <ChartDonutActive data={data.assetAllocation} />
         </div>
-        <div className="lg:col-span-2">
-          <ChartAreaInteractive />
+        <div className="lg:col-span-2 h-[350px]">
+          <ChartBarStacked />
         </div>
       </div>
 

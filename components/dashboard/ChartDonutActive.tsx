@@ -2,8 +2,7 @@
 
 import { useState } from 'react';
 import { TrendingUp } from 'lucide-react';
-import { Label, Pie, PieChart, Sector } from 'recharts';
-import type { PieSectorShapeProps } from 'recharts/types/polar/Pie';
+import { Label, Pie, PieChart, Cell, ResponsiveContainer } from 'recharts';
 import {
   Card,
   CardContent,
@@ -12,12 +11,23 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import {
-  ChartContainer,
-  ChartTooltip,
-  ChartTooltipContent,
-  type ChartConfig,
-} from '@/components/ui/chart';
+import { ChartContainer, type ChartConfig } from '@/components/ui/chart';
+
+// Tooltip customizado (usando componente nativo do recharts, sem tipos complexos)
+const CustomTooltip = ({ active, payload }: any) => {
+  if (active && payload?.length) {
+    const entry = payload[0].payload;
+    return (
+      <div className="rounded-lg border bg-background p-2 shadow-sm">
+        <p className="font-medium">{entry.name}</p>
+        <p className="text-sm text-muted-foreground">
+          {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(entry.value)} ({entry.percent.toFixed(1)}%)
+        </p>
+      </div>
+    );
+  }
+  return null;
+};
 
 interface AllocationItem {
   category: string;
@@ -29,7 +39,6 @@ interface ChartDonutActiveProps {
   data: AllocationItem[];
 }
 
-// Mapeamento de cores (use as mesmas variáveis CSS do exemplo)
 const categoryColors: Record<string, string> = {
   CASH: 'var(--chart-1)',
   STOCK: 'var(--chart-2)',
@@ -40,83 +49,60 @@ const categoryColors: Record<string, string> = {
 };
 
 export function ChartDonutActive({ data }: ChartDonutActiveProps) {
-  const [activeIndex, setActiveIndex] = useState(0);
+  const [activeIndex, setActiveIndex] = useState<number | null>(null);
 
-  // Converte os dados para o formato do gráfico
-  const chartData = data.map((item, index) => ({
+  const chartData = data.map((item) => ({
     name: item.category,
     value: parseFloat(item.value),
     percent: parseFloat(item.percent),
     fill: categoryColors[item.category] || categoryColors.OTHER,
   }));
 
-  // Configuração dinâmica para o ChartContainer
   const chartConfig: ChartConfig = {
     value: { label: 'Valor (R$)' },
     ...chartData.reduce((acc, item) => {
-      acc[item.name] = {
-        label: item.name,
-        color: item.fill,
-      };
+      acc[item.name] = { label: item.name, color: item.fill };
       return acc;
     }, {} as ChartConfig),
   };
 
   if (!chartData.length) return null;
 
-  // Total para o centro
   const total = chartData.reduce((sum, item) => sum + item.value, 0);
 
-  // Formato customizado para o tooltip
-  const CustomTooltipContent = ({ active, payload }: any) => {
-    if (active && payload && payload.length) {
-      const entry = payload[0].payload;
-      return (
-        <div className="rounded-lg border bg-background p-2 shadow-sm">
-          <p className="font-medium">{entry.name}</p>
-          <p className="text-sm text-muted-foreground">
-            {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(entry.value)} ({entry.percent.toFixed(1)}%)
-          </p>
-        </div>
-      );
-    }
-    return null;
-  };
-
-  // shape personalizada: destaca o setor ativo (expande 10px)
-  const renderActiveShape = (props: PieSectorShapeProps & { index?: number }) => {
-    const { index, outerRadius = 0, ...rest } = props;
-    const expandedRadius = index === activeIndex ? (outerRadius as number) + 10 : outerRadius;
-    return <Sector {...rest} outerRadius={expandedRadius} />;
-  };
-
   return (
-    <Card className="flex flex-col">
+    <Card className="flex flex-col h-full">
       <CardHeader className="items-center pb-0">
         <CardTitle>Alocação por Categoria</CardTitle>
         <CardDescription>Patrimônio atual</CardDescription>
       </CardHeader>
-      <CardContent className="flex-1 pb-0">
+      <CardContent className="flex-1 pb-0 flex items-center justify-center min-h-0">
         <ChartContainer
           config={chartConfig}
-          className="mx-auto aspect-square max-h-[250px] w-full"
+          className="aspect-square max-h-[300px] w-full"
         >
-          <PieChart>
-            <ChartTooltip
-              cursor={false}
-              content={<CustomTooltipContent />}
-            />
-            <Pie
-              data={chartData}
-              dataKey="value"
-              nameKey="name"
-              innerRadius={60}
-              strokeWidth={5}
-              shape={renderActiveShape}
-              onMouseEnter={(_, index) => setActiveIndex(index)}
-              // option: reset on mouse leave
-              onMouseLeave={() => setActiveIndex(0)}
-            >
+          <ResponsiveContainer width="100%" height="100%">
+            <PieChart>
+              <Pie
+                data={chartData}
+                dataKey="value"
+                nameKey="name"
+                innerRadius={60}
+                outerRadius={90}
+                paddingAngle={2}
+                onMouseEnter={(_, index) => setActiveIndex(index)}
+                onMouseLeave={() => setActiveIndex(null)}
+              >
+                {chartData.map((entry, idx) => (
+                  <Cell
+                    key={`cell-${idx}`}
+                    fill={entry.fill}
+                    stroke={activeIndex === idx ? 'white' : 'none'}
+                    strokeWidth={activeIndex === idx ? 3 : 0}
+                  />
+                ))}
+              </Pie>
+              <CustomTooltip />
               <Label
                 content={({ viewBox }) => {
                   if (viewBox && 'cx' in viewBox && 'cy' in viewBox) {
@@ -152,8 +138,8 @@ export function ChartDonutActive({ data }: ChartDonutActiveProps) {
                   return null;
                 }}
               />
-            </Pie>
-          </PieChart>
+            </PieChart>
+          </ResponsiveContainer>
         </ChartContainer>
       </CardContent>
       <CardFooter className="flex-col gap-2 text-sm">
