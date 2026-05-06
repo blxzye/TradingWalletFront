@@ -112,7 +112,7 @@ export default function DashboardPage() {
         <div className="lg:col-span-1 h-[350px]">
           <ChartDonutActive data={data.assetAllocation} />
         </div>
-        <div className="lg:col-span-2 h-[350px]">
+        <div className="lg:col-span-2 h-[350px] block-content">
           <ChartBarStacked />
         </div>
       </div>

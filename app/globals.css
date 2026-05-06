@@ -117,6 +117,19 @@
   --sidebar-ring: oklch(0.556 0 0);
 }
 
+.block-content,
+.block-content * {
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.block-graph-outline :focus,
+.block-graph-outline :active {
+  outline: none !important;
+  box-shadow: none !important;
+  -webkit-tap-highlight-color: transparent;
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;

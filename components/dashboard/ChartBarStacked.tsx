@@ -1,7 +1,6 @@
 "use client";
 
-import { useState } from "react";
-import { TrendingUp } from "lucide-react";
+import { useState, useMemo } from "react";
 import {
   Bar,
   BarChart,
@@ -16,7 +15,6 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-  CardAction,
 } from "@/components/ui/card";
 import {
   ChartContainer,
@@ -38,7 +36,6 @@ import {
 
 type Period = "12m" | "2y" | "5y" | "10y";
 
-// Função para gerar dados mockados baseados no período
 const generateData = (period: Period) => {
   const monthsMap: Record<Period, number> = {
     "12m": 12,
@@ -50,28 +47,30 @@ const generateData = (period: Period) => {
   const data = [];
   let invested = 50000;
   let gain = 2000;
+  const now = new Date();
+  let currentDate = new Date(now.getFullYear(), now.getMonth(), 1);
 
-  // Determinar o label do mês/ano
-  const getLabel = (index: number, total: number) => {
-    if (total <= 24) return `${index + 1}`; // meses
-    if (total <= 60) return `${Math.floor(index / 12) + 1}a`; // anos abreviados
-    return `${Math.floor(index / 12) + 1}a`;
-  };
+  for (let i = totalMonths - 1; i >= 0; i--) {
+    const date = new Date(currentDate);
+    date.setMonth(date.getMonth() - i);
+    const month = date.getMonth() + 1;
+    const year = date.getFullYear();
+    const label = `${month.toString().padStart(2, "0")}/${year}`;
 
-  for (let i = 0; i < totalMonths; i++) {
-    // Simula crescimento com alguma variação
     invested += Math.random() * 1500 - 300;
     gain += Math.random() * 800 - 100;
     gain = Math.max(gain, 0);
     invested = Math.max(invested, 30000);
+
     data.push({
-      month: getLabel(i, totalMonths),
+      month: label,
       invested: Math.round(invested),
       gain: Math.round(gain),
-      fullDate: new Date(2020, Math.floor(i / 12), (i % 12) + 1).toISOString(), // apenas para ordenação
+      sortOrder: i,
     });
   }
-  return data;
+  const sortedOldToNew = data.sort((a, b) => a.sortOrder - b.sortOrder);
+  return sortedOldToNew.reverse();
 };
 
 const chartConfig = {
@@ -87,10 +86,8 @@ const chartConfig = {
 
 export function ChartBarStacked() {
   const [period, setPeriod] = useState<Period>("12m");
-  const chartData = generateData(period);
+  const chartData = useMemo(() => generateData(period), [period]);
 
-  const lastMonth = chartData[chartData.length - 1];
-  const patrimonio = lastMonth.invested + lastMonth.gain;
   const maxPatrimonio = Math.max(...chartData.map((d) => d.invested + d.gain));
   const yAxisMax = Math.ceil(maxPatrimonio / 10000) * 10000;
 
@@ -100,6 +97,13 @@ export function ChartBarStacked() {
     { value: "5y", label: "5 anos" },
     { value: "10y", label: "10 anos" },
   ];
+
+  const getTickInterval = () => {
+    if (period === "12m") return 0;
+    if (period === "2y") return 2;
+    if (period === "5y") return 5;
+    return 12;
+  };
 
   return (
     <Card className="flex flex-col h-full">
@@ -111,27 +115,25 @@ export function ChartBarStacked() {
               Valor aplicado + ganho de capital (acumulado mensal)
             </CardDescription>
           </div>
-          <CardAction>
-            <Select value={period} onValueChange={(value) => setPeriod(value as Period)}>
-              <SelectTrigger className="w-[120px]">
-                <SelectValue placeholder="Período" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectGroup>
-                  <SelectLabel>Período</SelectLabel>
-                  {periodOptions.map((opt) => (
-                    <SelectItem key={opt.value} value={opt.value}>
-                      {opt.label}
-                    </SelectItem>
-                  ))}
-                </SelectGroup>
-              </SelectContent>
-            </Select>
-          </CardAction>
+          <Select value={period} onValueChange={(value) => setPeriod(value as Period)}>
+            <SelectTrigger className="w-[130px]">
+              <SelectValue placeholder="Período" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectGroup>
+                <SelectLabel>Período</SelectLabel>
+                {periodOptions.map((opt) => (
+                  <SelectItem key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </SelectItem>
+                ))}
+              </SelectGroup>
+            </SelectContent>
+          </Select>
         </div>
       </CardHeader>
       <CardContent className="flex-1 min-h-0">
-        <ChartContainer config={chartConfig} className="h-full w-full">
+        <ChartContainer config={chartConfig} className="h-full w-full block-graph-outline">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart
               data={chartData}
@@ -148,7 +150,10 @@ export function ChartBarStacked() {
                 tickLine={false}
                 tickMargin={10}
                 axisLine={false}
-                interval={period === "12m" ? 0 : Math.floor(chartData.length / 12)}
+                interval={getTickInterval()}
+                angle={-30}
+                textAnchor="end"
+                height={60}
               />
               <YAxis
                 domain={[0, yAxisMax]}
@@ -178,10 +183,7 @@ export function ChartBarStacked() {
                         name === "invested" ? "Valor Aplicado" : "Ganho de Capital";
                       return [formatted, label];
                     }}
-                    labelFormatter={(label) => {
-                      if (period === "12m") return `Mês ${label}`;
-                      return `Período ${label}`;
-                    }}
+                    labelFormatter={(label) => `${label}`}
                   />
                 }
               />
@@ -191,32 +193,19 @@ export function ChartBarStacked() {
                 stackId="a"
                 fill="var(--color-invested)"
                 radius={[0, 0, 4, 4]}
-                activeBar={{ fillOpacity: 0.8 }}
+                activeBar={{ fill: "var(--color-invested)", fillOpacity: 0.7 }}
               />
               <Bar
                 dataKey="gain"
                 stackId="a"
                 fill="var(--color-gain)"
                 radius={[4, 4, 0, 0]}
-                activeBar={{ fillOpacity: 0.8 }}
+                activeBar={{ fill: "var(--color-gain)", fillOpacity: 0.7 }}
               />
             </BarChart>
           </ResponsiveContainer>
         </ChartContainer>
       </CardContent>
-      <div className="flex-col items-start gap-2 text-sm p-6 pt-0">
-        <div className="flex gap-2 leading-none font-medium">
-          Patrimônio líquido atual:{" "}
-          {new Intl.NumberFormat("pt-BR", {
-            style: "currency",
-            currency: "BRL",
-          }).format(patrimonio)}
-          <TrendingUp className="h-4 w-4" />
-        </div>
-        <div className="leading-none text-muted-foreground">
-          Valores acumulados por período (investido + ganho = patrimônio)
-        </div>
-      </div>
     </Card>
   );
 }
