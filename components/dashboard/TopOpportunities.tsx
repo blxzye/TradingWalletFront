@@ -2,7 +2,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { BackendDashboardSummary } from '@/types/backendDashboardSummary';
+import { BackendDashboardSummary } from '@/types/BackendDashboardSummary';
 
 interface TopOpportunitiesProps {
   opportunities: BackendDashboardSummary['topOpportunities'];

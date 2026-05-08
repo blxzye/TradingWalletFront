@@ -2,7 +2,7 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { SectionCards } from '@/components/section-cards';
-import { DataTable } from '@/components/data-table';
+import { ReturnsComparisonTable } from '@/components/dashboard/ReturnsComparisonTable';
 import { ChartDonutActive } from '@/components/dashboard/ChartDonutActive';
 import { ChartBarStacked } from '@/components/dashboard/ChartBarStacked';
 import { api } from '@/lib/api/apiClient';
@@ -112,13 +112,13 @@ export default function DashboardPage() {
         <div className="lg:col-span-1 h-[350px]">
           <ChartDonutActive data={data.assetAllocation} />
         </div>
-        <div className="lg:col-span-2 h-[350px] block-content">
+        <div className="lg:col-span-2 h-[350px] block-content ">
           <ChartBarStacked />
         </div>
       </div>
-
-      {/* Tabela de holdings */}
-      <DataTable data={holdingsTableData} />
+      <div className='px-4 lg:px-6'>
+        <ReturnsComparisonTable />
+      </div>
     </div>
   );
 }

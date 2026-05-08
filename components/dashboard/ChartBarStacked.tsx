@@ -219,7 +219,7 @@ export function ChartBarStacked() {
           </Select>
         </div>
       </CardHeader>
-      <CardContent className="flex-1 min-h-0 relative">
+      <CardContent className="flex-1 min-h-0 relative block-graph-outline">
         {/* Botão de expandir posicionado no canto inferior direito */}
         <Dialog>
           <DialogTrigger asChild>
